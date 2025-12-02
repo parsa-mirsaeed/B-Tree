@@ -183,20 +183,23 @@ fn App() -> Element {
     let mut tree = use_signal(|| BTree::<NaturalString>::new());
     let mut input_val = use_signal(|| String::new());
 
+    // 1. ZOOM STATE
+    let mut zoom = use_signal(|| 1.0_f64);
+
     let css = asset!("/assets/main.css");
 
     rsx! {
         document::Link { rel: "stylesheet", href: css }
-        
+
         div {
             class: "app-container",
-            
+
             h1 { "سیستم ذخیره‌سازی Academic" }
             p { class: "subtitle", "پیاده‌سازی درخت B-Tree استاندارد (Order 4) با مرتب‌سازی فارسی" }
 
             div {
                 class: "input-group",
-                
+
                 input {
                     value: "{input_val}",
                     oninput: move |evt| input_val.set(evt.value()),
@@ -207,16 +210,44 @@ fn App() -> Element {
                     },
                     placeholder: "نام دانشجو یا عدد...",
                 }
-                
+
                 button {
                     onclick: move |_| handle_insert(tree, input_val),
                     "درج (Insert)"
                 }
             }
 
-            // Expanded Viewport
+            // 2. VIEWPORT WITH ZOOM CONTROLS
             div { class: "tree-viewport-unlimited",
-                div { class: "tree",
+
+                // Floating Toolbar
+                div { class: "zoom-controls",
+                    button {
+                        class: "zoom-btn",
+                        onclick: move |_| zoom.set((zoom() + 0.1).min(3.0)),
+                        title: "Zoom In",
+                        "+"
+                    }
+                    button {
+                        class: "zoom-btn",
+                        onclick: move |_| zoom.set((zoom() - 0.1).max(0.2)),
+                        title: "Zoom Out",
+                        "-"
+                    }
+                    button {
+                        class: "zoom-btn",
+                        onclick: move |_| zoom.set(1.0),
+                        title: "Reset Zoom",
+                        "⟲"
+                    }
+                }
+
+                // Scalable Tree Container
+                div {
+                    class: "tree",
+                    // Apply the scale transform dynamically
+                    style: "transform: scale({zoom}); transform-origin: top center; transition: transform 0.2s ease-out;",
+
                     // Root has no incoming edge label
                     RecursiveNode { node: tree.read().root.clone(), incoming_label: String::new() }
                 }

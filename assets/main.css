@@ -93,24 +93,69 @@ button:active {
 /* UPDATED VIEWPORT: Unlimited Canvas */
 .tree-viewport-unlimited {
     width: 100%;
-    /* Min height to let the tree grow down */
-    min-height: 400px;
+    /* Occupy 65% of viewport height so it fits on screen without page scroll */
+    height: 65vh;
     overflow: auto;
-    /* Allow scrolling in all directions */
-    background: white;
-    border-radius: 12px;
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.05);
-    /* Inner shadow looks like a canvas */
-    border: 1px solid #e1e4e8;
-    display: flex;
-    /* Center the tree initially, but let it grow */
-    justify-content: center;
-    align-items: flex-start;
-    padding: 60px;
-    /* More padding for large trees */
+    /* Enable Scrollbars for both X and Y */
 
-    /* Force LTR for layout */
+    background: white;
+    /* Dot pattern background for "Engineering Canvas" look */
+    background-image: radial-gradient(#e1e4e8 1px, transparent 1px);
+    background-size: 20px 20px;
+
+    border-radius: 12px;
+    border: 1px solid #bdc3c7;
+
+    display: flex;
+    justify-content: center;
+    /* Horizontally center content */
+    align-items: flex-start;
+    /* Start from top */
+    padding: 60px;
+
+    position: relative;
+    /* For positioning zoom controls absolute */
     direction: ltr !important;
+}
+
+/* Floating Zoom Controls */
+.zoom-controls {
+    position: sticky;
+    /* Sticks to corner while scrolling */
+    top: 10px;
+    left: 10px;
+    /* Left side because direction is LTR inside viewport */
+    z-index: 100;
+
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 8px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ddd;
+}
+
+.zoom-btn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background-color: white;
+    color: #2c3e50;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.zoom-btn:hover {
+    background-color: #f1f2f6;
+    color: #27ae60;
 }
 
 .tree {
