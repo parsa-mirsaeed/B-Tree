@@ -2,6 +2,8 @@
 
 [web.app]
 
+base_path = "/B-Tree/"
+
 # HTML title tag content
 title = "b-tree"
 
