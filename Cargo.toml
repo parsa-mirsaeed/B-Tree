@@ -1,19 +1,19 @@
 [package]
-name = "edu_btree"
-version = "0.1.0"
-edition = "2021"
+name = "b-tree"
+version = "0.2.0"
 authors = ["Parsa MirSaeed <parsa.mirsaeed@gmail.com>"]
-description = "A standard B-Tree implementation compliant with ISO/IEC 23001-1"
-
-[profile.release]
-opt-level = 'z'
-lto = true
-codegen-units = 1
+edition = "2021"
 
 [dependencies]
-# Dependencies for the UI (Dioxus) - We will add these next step
-# dioxus = "0.4"
-# dioxus-web = "0.4"
+# Dioxus 0.7.1 with the web feature enabled
+dioxus = { version = "0.7.1", features = ["web"] }
 
-# Dependencies for serialization (if needed later)
-# serde = { version = "1.0", features = ["derive"] }
+# Logging utilities for the browser console
+dioxus-logger = "0.5"
+log = "0.4"
+
+[features]
+default = ["web"]
+web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]
+mobile = ["dioxus/mobile"]

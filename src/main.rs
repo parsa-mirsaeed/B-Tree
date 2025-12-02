@@ -1,32 +1,99 @@
-use std::fmt::Debug;
-use std::str::FromStr;
-use std::io::{self, Write};
+#![allow(non_snake_case)]
+
+use dioxus::prelude::*;
+use std::fmt::{Debug, Display};
+use std::cmp::Ordering;
 
 // ==============================================================================
-// CONFIGURATION
+// 1. SMART KEY (Persian & Natural Sort)
+//    Handles numbers logically (10 > 2) AND Persian Alphabet (Pe before Te)
 // ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct NaturalString(String);
+
+impl NaturalString {
+    // Helper to assign correct alphabetical weight to Persian characters
+    fn get_char_weight(c: char) -> u32 {
+        match c {
+            'آ' => 1, 'ا' => 2, 'ب' => 3, 
+            'پ' => 4, // Pe comes strictly after Be
+            'ت' => 5, // Te comes strictly after Pe
+            'ث' => 6, 'ج' => 7, 
+            'چ' => 8, // Che comes after Jim
+            'ح' => 9, 'خ' => 10, 'د' => 11, 'ذ' => 12, 'ر' => 13, 'ز' => 14, 
+            'ژ' => 15, // Zhe comes after Ze
+            'س' => 16, 'ش' => 17, 'ص' => 18, 'ض' => 19, 'ط' => 20, 'ظ' => 21, 
+            'ع' => 22, 'غ' => 23, 'ف' => 24, 'ق' => 25, 
+            'ک' => 26, 
+            'گ' => 27, // Gaf comes after Kaf
+            'ل' => 28, 'م' => 29, 'ن' => 30, 'و' => 31, 'ه' => 32, 'ی' => 33,
+            _ => c as u32 + 1000, // Non-Persian chars go to the end (keep Unicode order)
+        }
+    }
+
+    // Compare two strings based on Persian weights
+    fn compare_persian(s1: &str, s2: &str) -> Ordering {
+        let chars1: Vec<char> = s1.chars().collect();
+        let chars2: Vec<char> = s2.chars().collect();
+        let len = std::cmp::min(chars1.len(), chars2.len());
+
+        for i in 0..len {
+            let w1 = Self::get_char_weight(chars1[i]);
+            let w2 = Self::get_char_weight(chars2[i]);
+            match w1.cmp(&w2) {
+                Ordering::Equal => continue,
+                other => return other,
+            }
+        }
+        chars1.len().cmp(&chars2.len())
+    }
+}
+
+impl PartialOrd for NaturalString {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for NaturalString {
+    fn cmp(&self, other: &Self) -> Ordering {
+        // 1. Try parsing as numbers first (Math Sort)
+        let a_int = self.0.parse::<i64>();
+        let b_int = other.0.parse::<i64>();
+
+        match (a_int, b_int) {
+            (Ok(a), Ok(b)) => a.cmp(&b), 
+            // 2. If text, use Custom Persian Sort instead of default Unicode
+            _ => Self::compare_persian(&self.0, &other.0),
+        }
+    }
+}
+
+impl Display for NaturalString {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+// ==============================================================================
+// 2. CORE B-TREE LOGIC
+// ==============================================================================
+
 const MAX_KEYS: usize = 3;
 
-// ==============================================================================
-// GENERIC NODE (The Engine)
-// K: Ord + Clone + Debug means "This node works with Any Type that 
-// can be Ordered, Cloned, and Printed"
-// ==============================================================================
-#[derive(Clone, Debug)]
-struct Node<K: Ord + Clone + Debug> {
+#[derive(Clone, Debug, PartialEq)]
+struct Node<K: Ord + Clone + Debug + PartialEq + 'static> {
     keys: Vec<K>,
     children: Vec<Node<K>>,
 }
 
-#[derive(Debug)]
-pub struct BTree<K: Ord + Clone + Debug> {
+#[derive(Clone, Debug, PartialEq)]
+pub struct BTree<K: Ord + Clone + Debug + PartialEq + 'static> {
     root: Node<K>,
 }
 
-// ==============================================================================
-// GENERIC IMPLEMENTATION
-// ==============================================================================
-impl<K: Ord + Clone + Debug> Node<K> {
+impl<K: Ord + Clone + Debug + PartialEq> Node<K> {
     fn new(keys: Vec<K>, children: Vec<Node<K>>) -> Self {
         Node { keys, children }
     }
@@ -73,7 +140,7 @@ impl<K: Ord + Clone + Debug> Node<K> {
     }
 }
 
-impl<K: Ord + Clone + Debug> BTree<K> {
+impl<K: Ord + Clone + Debug + PartialEq> BTree<K> {
     pub fn new() -> Self {
         BTree {
             root: Node::new(vec![], vec![]),
@@ -89,77 +156,103 @@ impl<K: Ord + Clone + Debug> BTree<K> {
             self.root = new_root;
         }
     }
+}
 
-    pub fn print_structure(&self) {
-        println!("--- B-Tree Structure ---");
-        self.print_recursive(&self.root, 0);
-        println!("------------------------");
-    }
+// ==============================================================================
+// 3. CONTROLLER
+// ==============================================================================
 
-    fn print_recursive(&self, node: &Node<K>, level: usize) {
-        let indent = "    ".repeat(level);
-        println!("{}Node Keys: {:?}", indent, node.keys);
-        for child in &node.children {
-            self.print_recursive(child, level + 1);
-        }
+fn handle_insert(mut tree: Signal<BTree<NaturalString>>, mut input: Signal<String>) {
+    let current_val = input.read().clone();
+    if !current_val.trim().is_empty() {
+        tree.write().insert(NaturalString(current_val));
+        input.set(String::new());
     }
 }
 
 // ==============================================================================
-// USER INTERFACE (The Recognizer)
+// 4. VIEW
 // ==============================================================================
-fn get_input(prompt: &str) -> String {
-    print!("{}", prompt);
-    io::stdout().flush().unwrap();
-    let mut buffer = String::new();
-    io::stdin().read_line(&mut buffer).unwrap();
-    buffer.trim().to_string()
-}
 
 fn main() {
-    println!("Welcome to EduTalent B-Tree System");
-    println!("Please enter your first data item (Number, English Name, or Farsi Name):");
-    
-    let first_input = get_input(">> ");
-
-    // --- ARCHITECTURE DECISION: RECOGNIZER ---
-    // Try to parse as unsigned integer (u32)
-    if let Ok(num) = u32::from_str(&first_input) {
-        println!("\n[System]: Detected NUMBER mode. Logic is Mathematical (10 > 4).");
-        let mut db = BTree::<u32>::new();
-        db.insert(num);
-        db.print_structure();
-        run_number_loop(db);
-    } else {
-        println!("\n[System]: Detected TEXT mode (English/Farsi). Logic is Lexicographical.");
-        let mut db = BTree::<String>::new();
-        db.insert(first_input);
-        db.print_structure();
-        run_string_loop(db);
-    }
+    dioxus_logger::init(dioxus_logger::tracing::Level::INFO).expect("failed to init logger");
+    dioxus::launch(App);
 }
 
-// Loop for Numbers
-fn run_number_loop(mut db: BTree<u32>) {
-    loop {
-        let input = get_input(">> Add Number (or 'q' to quit): ");
-        if input == "q" { break; }
-        match u32::from_str(&input) {
-            Ok(num) => {
-                db.insert(num);
-                db.print_structure();
-            },
-            Err(_) => println!("Error: Please enter a valid number in Number Mode."),
+#[component]
+fn App() -> Element {
+    let mut tree = use_signal(|| BTree::<NaturalString>::new());
+    let mut input_val = use_signal(|| String::new());
+
+    let css = asset!("/assets/main.css");
+
+    rsx! {
+        document::Link { rel: "stylesheet", href: css }
+        
+        div {
+            class: "app-container",
+            
+            h1 { "سیستم ذخیره‌سازی Academic" }
+            p { class: "subtitle", "پیاده‌سازی درخت B-Tree استاندارد (Order 4) با مرتب‌سازی فارسی" }
+
+            div {
+                class: "input-group",
+                
+                input {
+                    value: "{input_val}",
+                    oninput: move |evt| input_val.set(evt.value()),
+                    onkeydown: move |evt: KeyboardEvent| {
+                        if evt.key() == Key::Enter {
+                            handle_insert(tree, input_val);
+                        }
+                    },
+                    placeholder: "نام دانشجو یا عدد...",
+                }
+                
+                button {
+                    onclick: move |_| handle_insert(tree, input_val),
+                    "درج (Insert)"
+                }
+            }
+
+            div {
+                class: "tree-viewport",
+                div {
+                    class: "tree",
+                    RecursiveNode { node: tree.read().root.clone() }
+                }
+            }
+            
+            div { class: "footer", "Powered by Rust by Parsa MirSaeed" }
         }
     }
 }
 
-// Loop for Strings (English or Farsi)
-fn run_string_loop(mut db: BTree<String>) {
-    loop {
-        let input = get_input(">> Add Name (or 'q' to quit): ");
-        if input == "q" { break; }
-        db.insert(input);
-        db.print_structure();
+#[component]
+fn RecursiveNode(node: Node<NaturalString>) -> Element {
+    if node.keys.is_empty() {
+        return rsx! {};
+    }
+
+    rsx! {
+        div {
+            class: "tree-branch",
+            
+            div {
+                class: "node-content",
+                for key in node.keys.iter() {
+                    span { class: "key-item", "{key.0}" }
+                }
+            }
+
+            if !node.is_leaf() {
+                div {
+                    class: "children-container",
+                    for child in node.children.iter() {
+                        RecursiveNode { node: child.clone() }
+                    }
+                }
+            }
+        }
     }
 }

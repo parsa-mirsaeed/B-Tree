@@ -1,0 +1,255 @@
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap');
+
+/* Global Reset & Font */
+body {
+    background-color: #f8f9fa;
+    color: #2c3e50;
+    font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    /* We keep the body RTL for the inputs and headers */
+    direction: rtl;
+}
+
+.app-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h1 {
+    margin-bottom: 10px;
+    color: #2c3e50;
+}
+
+.subtitle {
+    color: #7f8c8d;
+    margin-bottom: 40px;
+}
+
+/* Input Controls */
+.input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 40px;
+}
+
+input {
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: 1px solid #bdc3c7;
+    width: 300px;
+    font-size: 16px;
+    font-family: inherit;
+    outline: none;
+    transition: border 0.3s;
+}
+
+input:focus {
+    border-color: #27ae60;
+}
+
+button {
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: transform 0.1s, background 0.3s;
+    font-family: inherit;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+/* =========================================
+   TREE VISUALIZATION (Strict Layout)
+   ========================================= */
+
+.tree-viewport {
+    width: 100%;
+    overflow-x: auto;
+    padding: 40px 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e1e4e8;
+    display: flex;
+    justify-content: center;
+
+    /* CRITICAL: Force LTR for the tree structure logic.
+       This ensures 'first-child' is always on the Left visually,
+       matching our connector CSS logic. */
+    direction: ltr !important;
+}
+
+.tree {
+    display: flex;
+    justify-content: center;
+    padding-top: 20px;
+    direction: ltr !important;
+}
+
+/* Branch Wrapper */
+.tree-branch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    padding: 20px 10px 0 10px;
+    /* Space for lines above */
+    box-sizing: border-box;
+}
+
+/* The Node Box */
+.node-content {
+    background-color: #e8f5e9;
+    border: 2px solid #27ae60;
+    border-radius: 8px;
+    padding: 8px 16px;
+    margin-bottom: 20px;
+    /* Space for line below */
+    display: flex;
+    gap: 8px;
+    position: relative;
+    z-index: 2;
+    /* Optional: If you want text inside keys to be RTL, uncomment: */
+    /* direction: rtl; unicode-bidi: embed; */
+}
+
+.key-item {
+    font-weight: bold;
+    color: #1e8449;
+    /* font-family: 'Consolas', monospace; Removed to allow Vazirmatn */
+}
+
+/* Children Container */
+.children-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    position: relative;
+    /* Ensure connecting lines are visible */
+    padding-top: 20px;
+}
+
+/* =========================================
+   ROBUST CONNECTORS (The "Two-Arm" Method)
+   ========================================= */
+
+/* 1. Vertical Line DOWN from any Parent */
+/* We attach this to the .children-container to ensure it centers nicely over the group */
+.children-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    /* Starts at the top of the children container (which is below the parent) */
+    left: 50%;
+    width: 2px;
+    height: 20px;
+    /* Connects parent bottom to the horizontal bar */
+    background-color: #ccc;
+    transform: translateX(-50%);
+    z-index: 1;
+}
+
+/* 2. Vertical Line UP from every Child Node */
+.node-content::before {
+    content: '';
+    position: absolute;
+    top: -22px;
+    /* Go up to meet the horizontal bar */
+    left: 50%;
+    width: 2px;
+    height: 22px;
+    background-color: #ccc;
+    transform: translateX(-50%);
+    z-index: 1;
+}
+
+/* HIDE the UP line for the very first Root Node (it has no parent) */
+.tree>.tree-branch>.node-content::before {
+    display: none;
+}
+
+/* 3. Horizontal Bars (The Arms) above each child */
+/* Left Arm */
+.tree-branch::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 50%;
+    width: 50%;
+    height: 20px;
+    border-top: 2px solid #ccc;
+    z-index: 0;
+}
+
+/* Right Arm */
+.tree-branch::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 50%;
+    height: 20px;
+    border-top: 2px solid #ccc;
+    z-index: 0;
+}
+
+/* =========================================
+   EDGE CASES & CURVES
+   ========================================= */
+
+/* FIRST CHILD: Needs only the Right Arm (curved) */
+.children-container>.tree-branch:first-child::before {
+    display: none;
+    /* No line to the left */
+}
+
+.children-container>.tree-branch:first-child::after {
+    border-top-left-radius: 10px;
+    /* Curve the corner */
+    border-left: 2px solid #ccc;
+    /* This creates the curve down */
+    border-top: 2px solid #ccc;
+    /* The horizontal part */
+    /* Remove strict left border if it makes a double vertical line with node::before */
+    border-left: 2px solid #ccc;
+    height: 20px;
+}
+
+/* LAST CHILD: Needs only the Left Arm (curved) */
+.children-container>.tree-branch:last-child::after {
+    display: none;
+    /* No line to the right */
+}
+
+.children-container>.tree-branch:last-child::before {
+    border-top-right-radius: 10px;
+    border-right: 2px solid #ccc;
+    border-top: 2px solid #ccc;
+    height: 20px;
+}
+
+/* ONLY CHILD: No Horizontal Arms at all, just the vertical up */
+.children-container>.tree-branch:only-child::after,
+.children-container>.tree-branch:only-child::before {
+    display: none;
+}
+
+/* The vertical line UP is handled by .node-content::before */
+/* The vertical line DOWN from parent is handled by .children-container::before */
+
+.footer {
+    margin-top: 30px;
+    color: #bdc3c7;
+    font-size: 12px;
+}
