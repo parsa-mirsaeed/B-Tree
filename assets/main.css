@@ -75,7 +75,7 @@ button:active {
 
 .tree-viewport {
     width: 100%;
-    overflow-x: auto;
+    overflow: auto;
     padding: 40px 20px;
     background: white;
     border-radius: 12px;
@@ -87,6 +87,29 @@ button:active {
     /* CRITICAL: Force LTR for the tree structure logic.
        This ensures 'first-child' is always on the Left visually,
        matching our connector CSS logic. */
+    direction: ltr !important;
+}
+
+/* UPDATED VIEWPORT: Unlimited Canvas */
+.tree-viewport-unlimited {
+    width: 100%;
+    /* Min height to let the tree grow down */
+    min-height: 400px;
+    overflow: auto;
+    /* Allow scrolling in all directions */
+    background: white;
+    border-radius: 12px;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.05);
+    /* Inner shadow looks like a canvas */
+    border: 1px solid #e1e4e8;
+    display: flex;
+    /* Center the tree initially, but let it grow */
+    justify-content: center;
+    align-items: flex-start;
+    padding: 60px;
+    /* More padding for large trees */
+
+    /* Force LTR for layout */
     direction: ltr !important;
 }
 
@@ -103,7 +126,11 @@ button:active {
     flex-direction: column;
     align-items: center;
     position: relative;
-    padding: 20px 10px 0 10px;
+    padding-top: 30px;
+    /* Increased from 20px to make room for labels */
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 0;
     /* Space for lines above */
     box-sizing: border-box;
 }
@@ -127,7 +154,19 @@ button:active {
 .key-item {
     font-weight: bold;
     color: #1e8449;
+    padding: 0 8px;
+    position: relative;
     /* font-family: 'Consolas', monospace; Removed to allow Vazirmatn */
+}
+
+/* Add vertical separator between keys (standard B-Tree notation) */
+.key-item:not(:last-child)::after {
+    content: '|';
+    position: absolute;
+    right: -2px;
+    color: #27ae60;
+    font-weight: normal;
+    opacity: 0.5;
 }
 
 /* Children Container */
@@ -164,11 +203,13 @@ button:active {
 .node-content::before {
     content: '';
     position: absolute;
-    top: -22px;
+    top: -30px;
+    /* Adjusted from -22px to accommodate labels */
     /* Go up to meet the horizontal bar */
     left: 50%;
     width: 2px;
-    height: 22px;
+    height: 30px;
+    /* Increased from 22px */
     background-color: #ccc;
     transform: translateX(-50%);
     z-index: 1;
@@ -187,7 +228,8 @@ button:active {
     top: 0;
     right: 50%;
     width: 50%;
-    height: 20px;
+    height: 30px;
+    /* Increased from 20px to match new vertical spacing */
     border-top: 2px solid #ccc;
     z-index: 0;
 }
@@ -199,7 +241,8 @@ button:active {
     top: 0;
     left: 50%;
     width: 50%;
-    height: 20px;
+    height: 30px;
+    /* Increased from 20px to match new vertical spacing */
     border-top: 2px solid #ccc;
     z-index: 0;
 }
@@ -223,7 +266,8 @@ button:active {
     /* The horizontal part */
     /* Remove strict left border if it makes a double vertical line with node::before */
     border-left: 2px solid #ccc;
-    height: 20px;
+    height: 30px;
+    /* Increased from 20px */
 }
 
 /* LAST CHILD: Needs only the Left Arm (curved) */
@@ -236,7 +280,8 @@ button:active {
     border-top-right-radius: 10px;
     border-right: 2px solid #ccc;
     border-top: 2px solid #ccc;
-    height: 20px;
+    height: 30px;
+    /* Increased from 20px */
 }
 
 /* ONLY CHILD: No Horizontal Arms at all, just the vertical up */
@@ -247,6 +292,28 @@ button:active {
 
 /* The vertical line UP is handled by .node-content::before */
 /* The vertical line DOWN from parent is handled by .children-container::before */
+
+/* NEW: Connector Labels (The "a-hu" text) */
+.connector-label {
+    position: absolute;
+    top: -25px;
+    /* Position it on the vertical line above the node */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    color: #555;
+    border: 1px solid #ddd;
+    white-space: nowrap;
+    z-index: 5;
+    /* On top of lines */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+
+    /* Typography */
+    font-family: 'Vazirmatn', sans-serif;
+}
 
 .footer {
     margin-top: 30px;

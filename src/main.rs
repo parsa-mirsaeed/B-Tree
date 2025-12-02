@@ -8,7 +8,6 @@ use std::cmp::Ordering;
 // 1. SMART KEY (Persian & Natural Sort)
 //    Handles numbers logically (10 > 2) AND Persian Alphabet (Pe before Te)
 // ==============================================================================
-
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct NaturalString(String);
 
@@ -63,7 +62,7 @@ impl Ord for NaturalString {
         let b_int = other.0.parse::<i64>();
 
         match (a_int, b_int) {
-            (Ok(a), Ok(b)) => a.cmp(&b), 
+            (Ok(a), Ok(b)) => a.cmp(&b),
             // 2. If text, use Custom Persian Sort instead of default Unicode
             _ => Self::compare_persian(&self.0, &other.0),
         }
@@ -215,42 +214,55 @@ fn App() -> Element {
                 }
             }
 
-            div {
-                class: "tree-viewport",
-                div {
-                    class: "tree",
-                    RecursiveNode { node: tree.read().root.clone() }
+            // Expanded Viewport
+            div { class: "tree-viewport-unlimited",
+                div { class: "tree",
+                    // Root has no incoming edge label
+                    RecursiveNode { node: tree.read().root.clone(), incoming_label: String::new() }
                 }
             }
-            
             div { class: "footer", "Powered by Rust by Parsa MirSaeed" }
         }
     }
 }
 
 #[component]
-fn RecursiveNode(node: Node<NaturalString>) -> Element {
-    if node.keys.is_empty() {
-        return rsx! {};
-    }
+fn RecursiveNode(node: Node<NaturalString>, incoming_label: String) -> Element {
+    if node.keys.is_empty() { return rsx! {}; }
 
     rsx! {
-        div {
-            class: "tree-branch",
+        div { class: "tree-branch",
             
-            div {
-                class: "node-content",
+            // The Label on the incoming line (only if not root)
+            if !incoming_label.is_empty() {
+                div { class: "connector-label", "{incoming_label}" }
+            }
+
+            div { class: "node-content",
                 for key in node.keys.iter() {
                     span { class: "key-item", "{key.0}" }
                 }
             }
 
             if !node.is_leaf() {
-                div {
-                    class: "children-container",
-                    for child in node.children.iter() {
-                        RecursiveNode { node: child.clone() }
-                    }
+                div { class: "children-container",
+                    // Iterate through children and Calculate Range Labels
+                    {node.children.iter().enumerate().map(|(i, child)| {
+                        // Logic for a-hu, hy-m, etc.
+                        let label = if i == 0 {
+                            // First child: < Key[0]
+                            format!("< {}", node.keys[0].0)
+                        } else if i == node.keys.len() {
+                            // Last child: > Key[last]
+                            format!("> {}", node.keys[i-1].0)
+                        } else {
+                            // Middle: Key[i-1] ... Key[i]
+                            // NOTE: Reversed order to compensate for RTL text direction
+                            format!("{} - {}", node.keys[i].0, node.keys[i-1].0)
+                        };
+
+                        rsx! { RecursiveNode { node: child.clone(), incoming_label: label } }
+                    })}
                 }
             }
         }
