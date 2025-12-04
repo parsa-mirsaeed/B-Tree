@@ -194,7 +194,7 @@ fn App() -> Element {
         div {
             class: "app-container",
 
-            h1 { "سیستم ذخیره‌سازی Academic" }
+            h1 { "Academic Storage Engine (B-Tree Visualizer)" }
             p { class: "subtitle", "پیاده‌سازی درخت B-Tree استاندارد (Order 4) با مرتب‌سازی فارسی" }
 
             div {
