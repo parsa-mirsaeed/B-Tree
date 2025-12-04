@@ -29,11 +29,11 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
 
-      - name: Install Dioxus CLI
+      - name: Install cargo-binstall
         uses: cargo-bins/cargo-binstall@main
-        with:
-          name: dioxus-cli
-          version: latest
+
+      - name: Install Dioxus CLI
+        run: cargo binstall dioxus-cli -y
 
       - name: Build
         run: |
