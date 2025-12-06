@@ -1,0 +1,83 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Academic Storage Engine: B-Tree Visualizer with Persian Natural Sort"
+version: 0.2.0
+date-released: 2025-12-06
+url: "https://github.com/parsa-mirsaeed/B-Tree"
+repository-code: "https://github.com/parsa-mirsaeed/B-Tree"
+license: MIT
+
+authors:
+  - family-names: "Qazi MirSaeed"
+    given-names: "Seyed Parsa"
+    email: "parsa.mirsaeed@gmail.com"
+    alias: "parsa-mirsaeed"
+    affiliation: "Islamic Azad University, Karaj Branch"
+
+contact:
+  - name: "Dr. Hadi Saboohi"
+    role: "Academic Supervisor"
+    email: "saboohi@kiau.ac.ir"
+    affiliation: "Islamic Azad University, Karaj Branch"
+    website: "http://www.hadisaboohi.com"
+
+keywords:
+  - b-tree
+  - rust
+  - information-retrieval
+  - persian-localization
+  - natural-sort
+  - iso-10646
+  - iso-25010
+  - unicode
+  - data-structures
+  - wasm
+
+abstract: |
+  A high-performance B-Tree index construction engine (Order 4) implemented in Rust with 
+  Persian character normalization and natural sorting. Compliant with ISO/IEC 10646 (Unicode) 
+  and ISO/IEC 25010 (software quality). Visualized in WebAssembly (Dioxus) for 
+  client-side browser execution.
+
+references:
+  - type: book
+    authors:
+      - family-names: "Manning"
+        given-names: "Christopher D."
+      - family-names: "Raghavan"
+        given-names: "Prabhakar"
+      - family-names: "Schütze"
+        given-names: "Hinrich"
+    title: "Introduction to Information Retrieval"
+    publisher: "Cambridge University Press"
+    year: 2008
+    url: "https://nlp.stanford.edu/IR-book/"
+  
+  - type: book
+    authors:
+      - family-names: "Knuth"
+        given-names: "Donald E."
+    title: "The Art of Computer Programming, Vol. 3: Sorting and Searching"
+    edition: 2nd
+    publisher: "Addison-Wesley"
+    year: 1998
+  
+  - type: generic
+    authors:
+      - family-names: "Saboohi"
+        given-names: "Hadi"
+    title: "Lecture Notes: Foundations of Information Retrieval"
+    publisher: "Islamic Azad University, Karaj Branch"
+    year: 2025
+    url: "http://www.hadisaboohi.com/IR/"
+  
+  - type: webpage
+    title: "ISO/IEC 10646: Universal Coded Character Set (UCS)"
+    organization: "International Organization for Standardization"
+    url: "https://www.iso.org/standard/76835.html"
+  
+  - type: webpage
+    title: "ISO/IEC 25010: Systems and Software Engineering"
+    organization: "International Organization for Standardization"
+    url: "https://www.iso.org/standard/77212.html"
